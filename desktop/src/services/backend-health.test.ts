@@ -6,10 +6,10 @@ describe("parseBackendHealth", () => {
     const result = parseBackendHealth({
       status: "ok",
       service: "jarvis-agent",
-      version: "0.2.0",
+      version: "0.4.0",
     });
 
-    expect(result.version).toBe("0.2.0");
+    expect(result.version).toBe("0.4.0");
   });
 
   it("does not accept malformed boundary data", () => {
