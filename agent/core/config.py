@@ -18,6 +18,20 @@ class Settings(BaseSettings):
     )
     gemini_api_key: SecretStr | None = Field(default=None, validation_alias="GEMINI_API_KEY")
     live_bridge_token: str = Field(default="development-local-token-not-for-production", validation_alias="JARVIS_LIVE_TOKEN")
+    search_url_template: str = Field(
+        default="https://www.google.com/search?q={query}",
+        validation_alias="JARVIS_SEARCH_URL_TEMPLATE",
+    )
+    folder_roots: str = Field(default="", validation_alias="JARVIS_FOLDER_ROOTS")
+    folder_index_max_depth: int = Field(
+        default=3, ge=1, le=6, validation_alias="JARVIS_FOLDER_INDEX_MAX_DEPTH"
+    )
+    resolver_refresh_seconds: int = Field(
+        default=300, ge=30, le=86_400, validation_alias="JARVIS_RESOLVER_REFRESH_SECONDS"
+    )
+    user_aliases_path: str = Field(
+        default="config/user-aliases.json", validation_alias="JARVIS_USER_ALIASES_PATH"
+    )
 
 
 settings = Settings()
