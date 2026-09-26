@@ -1,6 +1,6 @@
 # JARVIS Desktop AI
 
-JARVIS is a Windows desktop AI assistant. The repository currently contains only the Phase 0 foundation: an Electron/React desktop shell and a localhost FastAPI agent.
+JARVIS is a Windows desktop AI assistant. Phase 1 adds the voice-reactive UI foundation to the secure Electron/React shell and localhost FastAPI agent.
 
 ## Architecture
 

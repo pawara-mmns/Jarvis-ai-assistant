@@ -1,6 +1,6 @@
 # JARVIS Desktop AI
 
-Phase 0 provides the production-oriented foundation for a future Windows desktop AI assistant. It includes a secure Electron shell, React status UI, a managed local FastAPI service, typed IPC/HTTP contracts, tests, and architecture documentation. Gemini and all assistant capabilities are intentionally out of scope.
+Phase 1 provides the voice-reactive interface foundation for a future Windows desktop AI assistant. It includes a secure Electron shell, state-driven React HUD, managed local FastAPI service, typed IPC/HTTP contracts, UI simulation tools, tests, and architecture documentation. Audio capture, Gemini, and OS automation remain intentionally out of scope.
 
 ## Requirements
 
