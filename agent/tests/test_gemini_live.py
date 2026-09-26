@@ -39,6 +39,7 @@ class FakeLiveSession:
         self.audio: list[bytes] = []
         self.audio_ends = 0
         self.receive_calls = 0
+        self.tool_responses: list[list[object]] = []
 
     async def receive(self):
         self.receive_calls += 1
@@ -55,6 +56,9 @@ class FakeLiveSession:
             self.audio.append(audio.data)
         if audio_stream_end:
             self.audio_ends += 1
+
+    async def send_tool_response(self, *, function_responses: list[object]) -> None:
+        self.tool_responses.append(function_responses)
 
 
 class FakeLiveConnection:
@@ -80,9 +84,11 @@ class FakeLiveApi:
     def __init__(self, connection: FakeLiveConnection) -> None:
         self.connection = connection
         self.connect_calls = 0
+        self.last_connect_options: dict[str, object] = {}
 
-    def connect(self, **_: object) -> FakeLiveConnection:
+    def connect(self, **options: object) -> FakeLiveConnection:
         self.connect_calls += 1
+        self.last_connect_options = options
         return self.connection
 
 
