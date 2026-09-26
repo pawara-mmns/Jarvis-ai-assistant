@@ -1,6 +1,9 @@
 import type { AssistantState } from "@shared/types/assistant-state";
 import { assistantStateConfig, assistantStates } from "../../config/assistant-state.config";
+import { useAudioStore } from "../../stores/audio.store";
 import { useAssistantUiStore } from "../../stores/assistant-ui.store";
+import { liveConversationController } from "../../live/LiveConversationController";
+import { useLiveStore } from "../../stores/live.store";
 
 interface DemoContent {
   transcript: string;
@@ -30,7 +33,7 @@ const demoContent: Record<AssistantState, DemoContent> = {
   },
   speaking: {
     transcript: "What is the current system status?",
-    responseText: "All Phase 1 interface systems are responding normally.",
+    responseText: "All local interface systems are responding normally.",
   },
   confirmation: {
     transcript: "Continue with the simulated action.",
@@ -45,9 +48,14 @@ const demoContent: Record<AssistantState, DemoContent> = {
 
 export function DevStateSimulator() {
   const store = useAssistantUiStore();
+  const stopMicrophone = useAudioStore((audio) => audio.stopMicrophone);
+  const live = useLiveStore();
 
   const selectState = (state: AssistantState) => {
     const demo = demoContent[state];
+    store.setInputSource("simulator");
+    liveConversationController.disconnect();
+    void stopMicrophone();
     store.setState(state);
     store.setTranscript(demo.transcript);
     store.setResponseText(demo.responseText);
@@ -61,6 +69,31 @@ export function DevStateSimulator() {
         <span className="dev-badge">DEV</span>
         <span>State simulator</span>
       </div>
+      <div className="dev-source-controls" role="group" aria-label="Development input source">
+        <button
+          type="button"
+          className={store.inputSource === "microphone" ? "is-active" : undefined}
+          aria-pressed={store.inputSource === "microphone"}
+          onClick={() => {
+            store.setInputSource("microphone");
+            store.setState("idle");
+          }}
+        >
+          Microphone
+        </button>
+        <button
+          type="button"
+          className={store.inputSource === "simulator" ? "is-active" : undefined}
+          aria-pressed={store.inputSource === "simulator"}
+          onClick={() => {
+            store.setInputSource("simulator");
+            liveConversationController.disconnect();
+            void stopMicrophone();
+          }}
+        >
+          Simulator
+        </button>
+      </div>
       <div className="dev-state-controls" role="group" aria-label="Select assistant state">
         {assistantStates.map((state) => (
           <button
@@ -73,6 +106,12 @@ export function DevStateSimulator() {
             {assistantStateConfig[state].shortLabel}
           </button>
         ))}
+      </div>
+      <div className="dev-live-readout" aria-label="Live voice diagnostics">
+        <span>AI {live.connectionState}</span>
+        <span>{live.streaming ? "INPUT STREAMING" : "INPUT LOCAL"}</span>
+        <span>{live.inputSampleRate ? `${live.inputSampleRate} HZ` : "RATE —"}</span>
+        <span>OUTPUT {live.outputPlaybackState}</span>
       </div>
       <details className="dev-copy-controls">
         <summary>Edit mock interaction</summary>
