@@ -10,10 +10,10 @@ let shutdownStarted = false;
 
 function createWindow(): void {
   const window = new BrowserWindow({
-    width: 920,
-    height: 680,
-    minWidth: 640,
-    minHeight: 480,
+    width: 1180,
+    height: 760,
+    minWidth: 820,
+    minHeight: 600,
     show: false,
     backgroundColor: "#080b10",
     webPreferences: {

@@ -1,49 +1,56 @@
 import { useEffect } from "react";
-import { StatusRow } from "./components/StatusRow";
+import { AppShell } from "./components/AppShell/AppShell";
+import { AssistantStatus } from "./components/AssistantStatus/AssistantStatus";
+import { BottomStatus } from "./components/BottomStatus/BottomStatus";
+import { DevStateSimulator } from "./components/DevStateSimulator/DevStateSimulator";
+import { MiniAssistant } from "./components/MiniAssistant/MiniAssistant";
+import { TranscriptPanel } from "./components/TranscriptPanel/TranscriptPanel";
+import { VoiceOrb } from "./components/VoiceOrb/VoiceOrb";
+import { Waveform } from "./components/Waveform/Waveform";
+import { assistantStateConfig } from "./config/assistant-state.config";
+import { useAssistantUiStore } from "./stores/assistant-ui.store";
 import { useConnectionStore } from "./stores/connection-store";
 
-const statusLabels = {
-  connecting: "Connecting...",
-  connected: "Connected",
-  offline: "Offline",
-} as const;
-
 export default function App() {
-  const { status, health, checkConnection } = useConnectionStore();
+  const checkConnection = useConnectionStore((store) => store.checkConnection);
+  const { state, transcript, responseText, executionLabel, errorMessage } = useAssistantUiStore();
+  const stateConfig = assistantStateConfig[state];
 
   useEffect(() => {
     void checkConnection();
   }, [checkConnection]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-canvas px-6 text-slate-100">
-      <section className="w-full max-w-md rounded-2xl border border-slate-800 bg-panel p-8 shadow-2xl shadow-black/40">
-        <div className="mb-8">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
-            Phase 0 — Foundation
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">JARVIS Desktop AI</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-400">
-            Secure desktop shell and local agent foundation.
-          </p>
+    <AppShell
+      footer={<BottomStatus />}
+      developmentTools={import.meta.env.DEV ? <DevStateSimulator /> : undefined}
+    >
+      <main className={`main-stage main-stage--${state}`} data-assistant-state={state}>
+        <div className="stage-metadata" aria-hidden="true">
+          <span>VOICE INTERFACE</span>
+          <span>UI / 0.2.0</span>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-black/20 px-4">
-          <StatusRow label="Desktop" value="Ready" active />
-          <StatusRow label="Agent" value={statusLabels[status]} active={status === "connected"} />
-          {health ? <StatusRow label="Service" value={health.service} /> : null}
-          {health ? <StatusRow label="Version" value={health.version} /> : null}
-        </div>
+        <section className="focus-stage" aria-label="Assistant voice status">
+          <div className="orb-frame">
+            <span className="orb-coordinate orb-coordinate--top">J-01</span>
+            <span className="orb-coordinate orb-coordinate--side">{stateConfig.activity}</span>
+            <VoiceOrb state={state} intensity={stateConfig.intensity} />
+          </div>
+          <Waveform mode={state} />
+          <AssistantStatus state={state} executionLabel={executionLabel} />
+        </section>
 
-        <button
-          type="button"
-          onClick={() => void checkConnection()}
-          disabled={status === "connecting"}
-          className="mt-6 w-full rounded-lg border border-cyan-900 bg-cyan-950/40 px-4 py-3 text-sm font-medium text-cyan-200 transition hover:border-cyan-700 hover:bg-cyan-950/70 disabled:cursor-wait disabled:opacity-60"
-        >
-          Retry Connection
-        </button>
-      </section>
-    </main>
+        <aside className="context-rail">
+          <TranscriptPanel
+            transcript={transcript}
+            responseText={responseText}
+            executionLabel={executionLabel}
+            errorMessage={errorMessage}
+          />
+          <MiniAssistant state={state} />
+        </aside>
+      </main>
+    </AppShell>
   );
 }
