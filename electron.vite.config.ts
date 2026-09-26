@@ -31,6 +31,7 @@ export default defineConfig({
       },
     },
     build: {
+      assetsInlineLimit: 0,
       rollupOptions: {
         input: resolve(__dirname, "desktop/index.html"),
       },
