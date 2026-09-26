@@ -15,7 +15,7 @@ export function BottomStatus() {
       </div>
       <div className="bottom-status__group bottom-status__group--end">
         <span>Build</span>
-        <strong>Phase 3 · Gemini Live voice</strong>
+        <strong>Phase 4.1 · Smart resolution</strong>
       </div>
     </footer>
   );

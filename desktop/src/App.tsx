@@ -76,7 +76,7 @@ export default function App() {
       <main className={`main-stage main-stage--${state}`} data-assistant-state={state}>
         <div className="stage-metadata" aria-hidden="true">
           <span>VOICE INTERFACE</span>
-          <span>LIVE AUDIO / 0.4.0</span>
+          <span>LIVE TOOLS / 0.5.1</span>
         </div>
 
         <section className="focus-stage" aria-label="Assistant voice status">
