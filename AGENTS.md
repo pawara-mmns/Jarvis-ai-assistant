@@ -1,10 +1,10 @@
 # JARVIS Desktop AI
 
-JARVIS is a Windows desktop AI assistant. Phase 1 adds the voice-reactive UI foundation to the secure Electron/React shell and localhost FastAPI agent.
+JARVIS is a Windows desktop AI assistant. Phase 3 adds explicitly connected Gemini Live voice, native audio playback, and transcripts to the secure Phase 0–2 foundation.
 
 ## Architecture
 
-Renderer → narrow preload IPC API → Electron main → HTTP on `127.0.0.1` → Python agent.
+Renderer → narrow preload IPC API → Electron main. The renderer streams typed PCM messages to the managed Python agent over an authenticated WebSocket on `127.0.0.1`; Python alone owns the Google GenAI SDK and Gemini key.
 
 Electron main owns privileged operations and the Python lifecycle. Never expose Node, arbitrary IPC, shell execution, or filesystem access to the renderer.
 
@@ -33,5 +33,6 @@ All relevant checks must pass before handoff.
 - Current implementation → `docs/CURRENT_STATE.md`
 - Roadmap → `docs/PHASES.md`
 - UI → `docs/UI.md`
+- Local audio → `docs/AUDIO.md`
 - Gemini design → `docs/GEMINI.md`
 - Security and tool permissions → `docs/SECURITY.md`

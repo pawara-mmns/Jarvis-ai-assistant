@@ -1,46 +1,47 @@
 # Current State
 
-**Version:** 0.2.0  
-**Current Phase:** Phase 1 — Voice Reactive UI Foundation
+**Version:** 0.4.0
+**Current Phase:** Phase 3 — Gemini Live Voice
 
 ## Completed
 
-- Phase 0 Electron, React, strict TypeScript, and localhost FastAPI foundation
-- Electron-managed Python startup, health validation, and graceful shutdown
-- Main JARVIS desktop HUD with restrained responsive styling
-- Reusable state-driven `VoiceOrb` and compact orb mode
-- Deterministic simulated `Waveform` with a future `levels` input
-- Central assistant status and current-interaction transcript panel
-- Real desktop and agent connectivity indicators
-- Development-only simulator for all eight assistant states and mock copy
-- Mini assistant visual preview without additional window behavior
-- Reduced-motion behavior and keyboard-accessible controls
-- UI configuration, store, status mapping, rendering, contract, and backend tests
+- Phase 0 secure Electron/React/FastAPI foundation and backend lifecycle
+- Phase 1 JARVIS voice-reactive HUD and development simulator
+- Phase 2 single-stream microphone engine, device selection, local waveform analysis, and VAD
+- Explicit Gemini Live connection and disconnection controls
+- Authenticated, typed localhost WebSocket bridge at `/ws/live`
+- AudioWorklet-backed continuous microphone frames
+- Stateful mono PCM16 resampling to 16 kHz with small chunks and VAD pre-roll
+- One backend-owned `gemini-3.8-live` session with finite reconnect/backoff
+- Gemini native PCM output queued through Web Audio at its declared sample rate (normally 24 kHz)
+- Incremental input and output transcription in the current-interaction UI
+- English, Sinhala, and mixed-language behavior in the concise system instruction
+- Listening → thinking → speaking → idle state integration and output-driven visuals
+- Barge-in playback flushing and Gemini interruption handling
+- Missing-key, authentication, transport, conversion, and playback error states
+- Mocked backend/frontend Live tests with no paid API calls
 
-## Architecture
-
-The Phase 0 boundary is unchanged: React calls the narrow preload API, Electron main owns IPC and the Python lifecycle, and the agent exposes only localhost health. Phase 1 UI state is local to a small Zustand store and uses the shared `AssistantState` type. UI labels and animation parameters live in one typed configuration.
-
-## How to Run
+## Run
 
 ```powershell
 npm install
 npm run python:setup
+Copy-Item .env.example .env
+# Add GEMINI_API_KEY to .env for Live voice; the app also runs without it.
 npm run dev
 ```
 
-If PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`.
-
-Verification commands are `npm run typecheck`, `npm run test`, `npm run test:python`, and `npm run build`.
+If PowerShell blocks `npm.ps1`, use `npm.cmd`.
 
 ## Not Yet Implemented
 
-- Microphone or audio capture, VAD, wake word, speech recognition, or speech output
-- Gemini or other AI integration
-- Desktop tools, OS automation, screen understanding, memory, or routines
-- Real floating/always-on-top mini window behavior
-- Installer or packaged Python runtime
+- Desktop tool execution or Gemini function calling
+- AI/model routing or Gemini Flash planning
+- Developer agent or screen vision
+- Long-term memory or routines
+- Wake word activation
+- Production tray, installer, or packaged Python runtime
 
 ## Next Phase
 
-Phase 2 — Local Audio Engine.
+Phase 4 — Desktop Tool Engine.

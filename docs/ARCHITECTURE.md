@@ -1,31 +1,31 @@
 # Architecture
 
-## Runtime Shape
+## Phase 3 Runtime
 
 ```text
-React renderer
-    ↓ narrow, typed preload API
-Electron IPC handler
-    ↓ validated HTTP on 127.0.0.1
-Python FastAPI agent
+Microphone (one getUserMedia stream)
+  ├─ AnalyserNode → RMS / waveform / local VAD → React UI
+  └─ AudioWorklet → Float32 → 16 kHz mono PCM16 → VAD gate + pre-roll
+       → authenticated ws://127.0.0.1:<port>/ws/live
+       → FastAPI route → GeminiLiveService → Google GenAI SDK
+       → gemini-3.8-live
+
+Gemini PCM + transcripts
+  → GeminiLiveService → typed localhost WebSocket messages
+  → AudioPlaybackEngine / current-interaction store
+  → speakers + VoiceOrb + Waveform + transcript UI
 ```
 
-The renderer is an untrusted presentation layer. It has no Node integration, process access, filesystem access, or raw Electron IPC. Its only Phase 0 privileged API is `window.jarvis.getBackendHealth()`.
+Electron main owns the window, audio-only permission policy, Python lifecycle, backend port, and an ephemeral Live bridge token. Preload exposes only backend health and the local Live connection details. The sandboxed renderer has no Node, filesystem, process, raw IPC, or Gemini credential access.
 
-The preload script uses context isolation and exposes that single frozen API. Both the preload boundary and the Electron HTTP client validate the health payload with the shared Zod schema.
+The renderer owns browser media capture, PCM conversion, VAD gating, and output playback. It never creates a second microphone stream. Python owns `GEMINI_API_KEY`, the official Google GenAI client, the remote Live connection, event translation, and bounded reconnects.
 
-Electron main is the desktop trust boundary. It creates the window, registers the allowlisted IPC handler, and owns `BackendManager`. The manager selects a Python interpreter, starts one child process, forwards concise logs, polls readiness, and performs graceful shutdown with a forced fallback.
+## Local Interfaces
 
-The FastAPI agent is a separate local process. Configuration enforces `127.0.0.1`; Phase 0 exposes only `GET /health`. Pydantic defines the response contract. Empty domain packages reserve clear locations for later AI, audio, tools, security, and memory work without implementing it.
+- `GET /health` is the Phase 0 health contract.
+- `/ws/live` accepts only `session.start`, `audio.chunk`, `audio.end`, and `session.stop`.
+- Server messages are limited to session state, transcripts, PCM output, interruption, turn completion, errors, and close.
+- Each application launch uses a random bridge token passed directly from Electron main to its managed Python child and through narrow preload IPC.
+- The FastAPI service remains bound exclusively to `127.0.0.1`.
 
-## Source Boundaries
-
-- `desktop/electron/`: privileged Electron main/preload code and lifecycle management
-- `desktop/src/`: unprivileged React UI
-- `agent/`: local Python service
-- `shared/`: TypeScript schemas, IPC names, and domain types
-- `docs/`: compact architecture and roadmap context
-
-## Future Direction
-
-Later phases may add realtime transport, Gemini-mediated reasoning, audio, and an approved tool registry. Gemini will remain outside the OS trust boundary: models may propose allowlisted tool calls, while local policy code validates and executes them.
+One explicit AI connection maps to one Gemini client/session. Disconnect, renderer unload, Electron quit, WebSocket loss, or backend shutdown closes the session. No desktop tools or generic command transport exist in Phase 3.

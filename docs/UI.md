@@ -1,48 +1,12 @@
 # UI Architecture
 
-Phase 1 implements the primary desktop-first JARVIS interface. The renderer remains an unprivileged presentation layer and receives real backend health through the existing preload API.
+Phase 3 preserves the Phase 1 HUD and Phase 2 microphone controls.
 
-## Component Structure
+- The header adds a restrained AI item: Offline, Connecting, Ready, Error, or Not Configured, plus Connect/Disconnect.
+- The microphone panel explicitly says either `LOCAL ONLY · audio stays on this device` or `AI SESSION ACTIVE · detected speech is sent to Gemini`.
+- `CURRENT INTERACTION` remains a two-row, current-turn view. Gemini input transcription replaces `YOU`; output transcription replaces `JARVIS`. It is not a chat history.
+- Listening uses microphone amplitude and waveform. Speaking uses actual decoded Gemini PCM amplitude and waveform.
+- Normal Live voice states are idle, listening, thinking, speaking, and error. `executing` remains reserved for future tools.
+- The development strip shows only connection state, input sample rate, input streaming/local state, and output playback state—never keys, base64 audio, or large event logs.
 
-- `AppShell` owns the top bar, content region, bottom status, and optional development tools.
-- `VoiceOrb` is the visual focal point and accepts `state`, optional `intensity`, and main/mini sizing.
-- `Waveform` accepts an assistant `mode` and optional normalized `levels`. It uses deterministic simulated levels when none are supplied.
-- `AssistantStatus` is driven by the shared state configuration rather than local labels.
-- `TranscriptPanel` shows only the current user request, assistant response, execution note, and error.
-- `ConnectionStatus` and `BottomStatus` display the real Phase 0 desktop/agent health.
-- `MiniAssistant` reuses `VoiceOrb` as a compact visual preview; it is not a second window.
-- `DevStateSimulator` appears only when `import.meta.env.DEV` is true.
-
-`assistant-state.config.ts` is the UI source of truth for labels, descriptions, activity labels, tone, orb intensity, and waveform energy. It covers the shared `AssistantState` values:
-
-```text
-sleeping
-idle
-listening
-thinking
-executing
-speaking
-confirmation
-error
-```
-
-## Motion
-
-The orb uses a small fixed set of CSS layers: ambient glow, two rings, shell, core, scan, and state mark. State differences use restrained color, opacity, rotation, scale, and scan behavior. The waveform uses 24 transform-animated bars with deterministic timing; it does not generate random values during rendering.
-
-Continuous motion stops under `prefers-reduced-motion: reduce`. Static color, shape, text, and activity labels keep every state recognizable without animation.
-
-## Future Audio Interface
-
-Phase 2 can supply live normalized values without replacing either visual component:
-
-```tsx
-<VoiceOrb state="listening" intensity={audioLevel} />
-<Waveform mode="listening" levels={audioLevels} />
-```
-
-Phase 1 does not request microphone access or use the Web Audio API.
-
-## Development Simulator
-
-The development footer switches all eight states immediately and applies editable mock transcript, assistant, execution, and error content. Production builds omit this control. It is visual test infrastructure only and contains no command parsing or AI logic.
+Local VAD still controls idle/listening when AI is disconnected. While a Live session is active, the Live controller owns the turn state so playback and turn-completion timing remain authoritative.

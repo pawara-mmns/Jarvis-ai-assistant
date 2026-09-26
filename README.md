@@ -1,44 +1,33 @@
 # JARVIS Desktop AI
 
-Phase 1 provides the voice-reactive interface foundation for a future Windows desktop AI assistant. It includes a secure Electron shell, state-driven React HUD, managed local FastAPI service, typed IPC/HTTP contracts, UI simulation tools, tests, and architecture documentation. Audio capture, Gemini, and OS automation remain intentionally out of scope.
+Phase 3 adds explicitly connected Gemini Live voice to the secure Electron/React desktop shell and localhost FastAPI agent. The existing local microphone UI/VAD resamples detected speech to 16 kHz PCM16; Python owns the Gemini credential and Live session; native PCM output and input/output transcripts return to the HUD.
 
 ## Requirements
 
-- Node.js 20 or newer
-- Python 3.12 or newer (the Windows `py` launcher is supported)
+- Windows 10/11
+- Node.js 22+
+- Python 3.12+
+- A Gemini API key only for Live voice (the app and local microphone work without one)
 
-## Setup
+## Run
 
 ```powershell
 npm install
 npm run python:setup
-```
-
-If Python is installed in a nonstandard location, set `JARVIS_PYTHON_PATH` to the interpreter before running setup. Copy `.env.example` to `.env` only when local configuration changes are needed; `.env` is ignored by Git.
-
-If PowerShell blocks the `npm.ps1` shim under the machine's execution policy, use `npm.cmd` in place of `npm` for the same commands.
-
-## Development
-
-```powershell
+Copy-Item .env.example .env
+# Set GEMINI_API_KEY in .env to enable AI voice.
 npm run dev
 ```
 
-Electron starts the Python service, waits for `GET /health`, and then opens the React UI. Closing the application stops the service.
-
-To run the backend by itself:
-
-```powershell
-npm run dev:agent
-```
+If PowerShell execution policy blocks `npm.ps1`, use `npm.cmd`.
 
 ## Verification
 
 ```powershell
 npm run typecheck
 npm run test
-npm run test:python
 npm run build
+npm run test:python
 ```
 
-See `docs/CURRENT_STATE.md` for the compact implementation summary and known limitations.
+The agent binds only to `127.0.0.1`. Gemini credentials stay in Python. AI connection is explicit, speech streaming is VAD-gated, and no desktop actions are implemented in Phase 3. See `docs/CURRENT_STATE.md` and `docs/GEMINI.md`.
