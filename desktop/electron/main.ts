@@ -1,12 +1,36 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, session } from "electron";
 import { BackendManager } from "./backend-manager";
 import { registerHealthHandler, unregisterHealthHandler } from "./ipc/health";
+import { registerLiveHandler, unregisterLiveHandler } from "./ipc/live";
 
 const currentDirectory = fileURLToPath(new URL(".", import.meta.url));
 let backendManager: BackendManager | null = null;
 let shutdownStarted = false;
+const trustedRendererIds = new Set<number>();
+
+function configureMediaPermissions(): void {
+  session.defaultSession.setPermissionRequestHandler(
+    (webContents, permission, callback, details) => {
+      const mediaTypes = "mediaTypes" in details ? (details.mediaTypes ?? []) : [];
+      const isAudioOnlyRequest =
+        permission === "media" &&
+        mediaTypes.length > 0 &&
+        mediaTypes.every((mediaType) => mediaType === "audio");
+      callback(trustedRendererIds.has(webContents.id) && isAudioOnlyRequest);
+    },
+  );
+
+  session.defaultSession.setPermissionCheckHandler((webContents, permission, _origin, details) => {
+    return Boolean(
+      webContents &&
+        trustedRendererIds.has(webContents.id) &&
+        permission === "media" &&
+        details.mediaType === "audio",
+    );
+  });
+}
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -23,6 +47,9 @@ function createWindow(): void {
       sandbox: true,
     },
   });
+  const rendererId = window.webContents.id;
+  trustedRendererIds.add(rendererId);
+  window.webContents.once("destroyed", () => trustedRendererIds.delete(rendererId));
 
   window.once("ready-to-show", () => window.show());
 
@@ -35,8 +62,10 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
-  backendManager = new BackendManager(app.getAppPath());
+  configureMediaPermissions();
+  backendManager = new BackendManager(app.getAppPath(), app.getVersion());
   registerHealthHandler(backendManager);
+  registerLiveHandler(backendManager);
 
   try {
     await backendManager.start();
@@ -60,5 +89,6 @@ app.on("before-quit", (event) => {
   event.preventDefault();
   shutdownStarted = true;
   unregisterHealthHandler();
+  unregisterLiveHandler();
   void backendManager.stop().finally(() => app.quit());
 });
