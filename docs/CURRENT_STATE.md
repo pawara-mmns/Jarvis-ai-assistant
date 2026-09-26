@@ -1,26 +1,27 @@
 # Current State
 
-**Version:** 0.4.0
-**Current Phase:** Phase 3 — Gemini Live Voice
+**Version:** 0.5.1
+
+**Current Phase:** Phase 4.1 — Smart Folder + Application Resolution
 
 ## Completed
 
-- Phase 0 secure Electron/React/FastAPI foundation and backend lifecycle
-- Phase 1 JARVIS voice-reactive HUD and development simulator
-- Phase 2 single-stream microphone engine, device selection, local waveform analysis, and VAD
-- Explicit Gemini Live connection and disconnection controls
-- Authenticated, typed localhost WebSocket bridge at `/ws/live`
-- AudioWorklet-backed continuous microphone frames
-- Stateful mono PCM16 resampling to 16 kHz with small chunks and VAD pre-roll
-- One backend-owned `gemini-3.8-live` session with finite reconnect/backoff
-- Persistent sender/receiver tasks that keep the same Gemini connection open across turns
-- Gemini native PCM output queued through Web Audio at its declared sample rate (normally 24 kHz)
-- Incremental input and output transcription in the current-interaction UI
-- English, Sinhala, and mixed-language behavior in the concise system instruction
-- Listening → thinking → speaking → idle state integration and output-driven visuals
-- Barge-in playback flushing and Gemini interruption handling
-- Missing-key, authentication, transport, conversion, and playback error states
-- Mocked backend/frontend Live tests with no paid API calls
+- Phase 0 — Foundation
+- Phase 1 — Voice Reactive UI
+- Phase 2 — Local Audio Engine
+- Phase 3 — Gemini Live Voice
+- Gemini Live manual function calling on the existing long-lived session
+- Central safe `ToolRegistry`, schema validation, permissions, timeouts, sanitized results, and audit logs
+- Approved application launching, browser URL/search actions, and read-only folder navigation
+- Windows output-volume control, minimal active-window lookup, and local-only screenshots
+- Typed tool lifecycle events plus executing/action-result UI states
+- Five-tool-call cap per user turn and exception isolation
+- Smart folder resolver with bounded trusted-root indexing
+- Built-in and user-configured folder aliases
+- Deterministic fuzzy matching, ambiguity results, and recent-resolution preference
+- Canonical explicit-path containment and traversal rejection
+- Cached Start Menu application discovery and fuzzy application matching
+- Validated local alias configuration
 
 ## Run
 
@@ -28,7 +29,7 @@
 npm install
 npm run python:setup
 Copy-Item .env.example .env
-# Add GEMINI_API_KEY to .env for Live voice; the app also runs without it.
+# Add GEMINI_API_KEY to .env for Live voice and function calling.
 npm run dev
 ```
 
@@ -36,13 +37,12 @@ If PowerShell blocks `npm.ps1`, use `npm.cmd`.
 
 ## Not Yet Implemented
 
-- Desktop tool execution or Gemini function calling
-- AI/model routing or Gemini Flash planning
-- Developer agent or screen vision
-- Long-term memory or routines
-- Wake word activation
+- Token-efficient local routing or a Gemini Flash planner
+- Developer agent or arbitrary terminal commands
+- Screen vision, mouse, or keyboard control
+- Long-term memory
 - Production tray, installer, or packaged Python runtime
 
 ## Next Phase
 
-Phase 4 — Desktop Tool Engine.
+Phase 5 — Token-Efficient AI Router.

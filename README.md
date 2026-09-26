@@ -1,6 +1,6 @@
 # JARVIS Desktop AI
 
-Phase 3 adds explicitly connected Gemini Live voice to the secure Electron/React desktop shell and localhost FastAPI agent. The existing local microphone UI/VAD resamples detected speech to 16 kHz PCM16; Python owns the Gemini credential and Live session; native PCM output and input/output transcripts return to the HUD.
+Phase 4.1 adds trusted-root folder indexing and cached Start Menu application discovery to the seven schema-validated Windows desktop tools. Gemini requests friendly names; Python resolves, validates, and executes only approved local targets.
 
 ## Requirements
 
@@ -30,4 +30,4 @@ npm run build
 npm run test:python
 ```
 
-The agent binds only to `127.0.0.1`. Gemini credentials stay in Python. AI connection is explicit, speech streaming is VAD-gated, and no desktop actions are implemented in Phase 3. See `docs/CURRENT_STATE.md` and `docs/GEMINI.md`.
+The agent binds only to `127.0.0.1`. Gemini credentials stay in Python. There is no arbitrary shell, command, executable-path, mouse, or keyboard access. See `docs/CURRENT_STATE.md`, `docs/GEMINI.md`, and `docs/TOOLS.md`.

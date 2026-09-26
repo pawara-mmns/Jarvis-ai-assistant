@@ -1,38 +1,21 @@
-# Gemini Live Voice
+# Gemini Live Voice and Tools
 
 ## Configuration
 
-The Python agent uses the official `google-genai` async Live API with:
+The Python agent uses `google-genai` with `gemini-3.8-live`, AUDIO responses, input/output transcription, and a concise multilingual instruction. The seven approved function declarations use the current SDK's explicit `Behavior.BLOCKING`; no thinking-level override, built-in search, code execution, computer-use tool, second model, or planner is enabled.
 
-- model: `gemini-3.8-live`
-- response modality: `AUDIO`
-- input and output audio transcription enabled
-- no `thinking_level`
-- one concise system instruction for short Sinhala, English, and mixed-language replies
-- no tools, function declarations, screenshots, second model, or planner
+`GEMINI_API_KEY` remains backend-only. `JARVIS_SEARCH_URL_TEMPLATE` configures the local browser-search URL and must contain one `{query}` placeholder.
 
-`GEMINI_API_KEY` belongs only in the backend `.env`. `.env.example` contains a blank placeholder. A missing key returns `AI Not Configured` / `Set GEMINI_API_KEY in .env` without stopping health or microphone features.
+## Session and Function Flow
 
-## Session Lifecycle
+The user explicitly enables the microphone and connects AI. The backend keeps the same Live connection open across turns and repeatedly consumes the SDK's per-turn `receive()` iterator.
 
-The user must enable the microphone and select **Connect AI**. Local WebSocket connection and Gemini connection states are kept separate: disconnected, connecting, ready, active, closing, and error. Duplicate connect calls reuse the in-progress/active session.
+When `response.tool_call` arrives, calls run sequentially through `ToolRegistry`. The backend validates arguments, enforces permission and the five-call turn cap, executes the Windows action, then sends `types.FunctionResponse` with the original function-call ID and compact `ToolResult`. Gemini receives the actual success/failure before it speaks. A failed tool is isolated and does not close the Live session.
 
-An unexpected Gemini connection loss retries at 0.5, 1.5, and 3 seconds, then exposes a safe error for manual retry. Authentication failures do not retry. Disconnect ends current context and closes the remote session. No session is opened on application startup.
+The system instruction requires result-grounded confirmations, brief failure explanations, and no invented or premature success. Screenshots are never attached to Gemini; only their friendly filename is returned.
 
-Gemini events are translated into the small local protocol. Input/output transcript deltas are merged into the current interaction only. `turn.complete` is remembered until queued output audio finishes, so the UI never reports idle while speech remains audible. Gemini interruption events and local barge-in clear the queue.
+## Lifecycle
 
-The SDK's `session.receive()` iterator covers one model turn. The backend receiver therefore invokes it inside an outer loop while the conversation remains active. `turn.complete` returns the session to ready; only explicit disconnect, shutdown, or a genuine connection failure exits the `client.aio.live.connect()` context.
+Unexpected connection loss retries at 0.5, 1.5, and 3 seconds. Authentication failures do not retry. Disconnect, renderer unload, Electron quit, WebSocket loss, or backend shutdown closes the session. Barge-in still stops queued output and starts a new voice turn.
 
-## Manual Verification
-
-After placing a real key in `.env`, run `npm.cmd run dev`, enable the microphone, and connect AI. Verify:
-
-1. English: “Hello Jarvis, can you hear me?”
-2. Sinhala: “ජාවිස්, ඔයාට මාව ඇහෙනවද?”
-3. Mixed: “Jarvis, JavaScript object එකක් කියන්නේ මොකක්ද?”
-4. Both transcript rows update and native audio is audible.
-5. Speaking orb/waveform respond to output, then return to idle after playback.
-6. Speaking over JARVIS stops queued output and starts a new turn.
-7. Disconnect, continue talking, and confirm the debug readout remains `INPUT LOCAL` with no Gemini session.
-
-Automated tests mock/translate SDK events and never make a paid Gemini call.
+Automated tests use fake SDK sessions and make no paid API calls. Manual acceptance should verify voice plus all actions listed in [TOOLS.md](TOOLS.md).
