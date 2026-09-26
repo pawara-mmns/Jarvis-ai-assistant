@@ -9,5 +9,10 @@ describe("Live voice assistant states", () => {
       ),
     ).toEqual(["listening", "thinking", "speaking", "idle"]);
   });
-});
 
+  it("uses executing while a tool runs and returns to thinking for either result", () => {
+    expect(resolveLiveAssistantState("tool.started")).toBe("executing");
+    expect(resolveLiveAssistantState("tool.completed")).toBe("thinking");
+    expect(resolveLiveAssistantState("tool.failed")).toBe("thinking");
+  });
+});

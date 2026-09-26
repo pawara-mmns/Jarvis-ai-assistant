@@ -49,6 +49,7 @@ export class LiveConversationController {
       inputSource: "microphone",
       transcript: "",
       responseText: "",
+      executionLabel: undefined,
       errorMessage: undefined,
     });
     try {
@@ -73,7 +74,11 @@ export class LiveConversationController {
     liveBackendClient.disconnect();
     audioPlaybackEngine.stop();
     this.resetAudioPipeline();
-    useAssistantUiStore.setState({ state: "idle", errorMessage: undefined });
+    useAssistantUiStore.setState({
+      state: "idle",
+      executionLabel: undefined,
+      errorMessage: undefined,
+    });
   }
 
   dispose(): void {
@@ -122,6 +127,7 @@ export class LiveConversationController {
         state: resolveLiveAssistantState("speech.started"),
         transcript: "",
         responseText: "",
+        executionLabel: undefined,
         errorMessage: undefined,
       });
       return;
@@ -168,6 +174,19 @@ export class LiveConversationController {
             this.finishTurn();
           }
         });
+        break;
+      case LIVE_MESSAGE_TYPES.toolStarted:
+        this.turnComplete = false;
+        assistant.setExecutionLabel(message.label);
+        assistant.setState(resolveLiveAssistantState("tool.started"));
+        break;
+      case LIVE_MESSAGE_TYPES.toolCompleted:
+        assistant.setExecutionLabel(message.message);
+        assistant.setState(resolveLiveAssistantState("tool.completed"));
+        break;
+      case LIVE_MESSAGE_TYPES.toolFailed:
+        assistant.setExecutionLabel(message.message);
+        assistant.setState(resolveLiveAssistantState("tool.failed"));
         break;
       case LIVE_MESSAGE_TYPES.turnComplete:
         this.turnComplete = true;
