@@ -18,5 +18,30 @@ describe("live message schemas", () => {
       liveServerMessageSchema.parse({ type: "audio.output", data: "", mimeType: "audio/mpeg" }),
     ).toThrow();
   });
-});
 
+  it("accepts compact tool lifecycle events and rejects argument leakage", () => {
+    expect(
+      liveServerMessageSchema.parse({
+        type: LIVE_MESSAGE_TYPES.toolStarted,
+        name: "open_app",
+        label: "Opening Chrome...",
+      }),
+    ).toMatchObject({ type: "tool.started", name: "open_app" });
+    expect(
+      liveServerMessageSchema.parse({
+        type: LIVE_MESSAGE_TYPES.toolCompleted,
+        name: "open_app",
+        success: true,
+        message: "Google Chrome opened.",
+      }),
+    ).toMatchObject({ success: true });
+    expect(() =>
+      liveServerMessageSchema.parse({
+        type: LIVE_MESSAGE_TYPES.toolStarted,
+        name: "open_folder",
+        label: "Opening folder...",
+        arguments: { path: "C:\\private" },
+      }),
+    ).toThrow();
+  });
+});

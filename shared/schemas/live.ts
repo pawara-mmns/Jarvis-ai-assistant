@@ -11,6 +11,9 @@ export const LIVE_MESSAGE_TYPES = {
   transcriptInput: "transcript.input",
   transcriptOutput: "transcript.output",
   audioOutput: "audio.output",
+  toolStarted: "tool.started",
+  toolCompleted: "tool.completed",
+  toolFailed: "tool.failed",
   turnComplete: "turn.complete",
   sessionInterrupted: "session.interrupted",
   sessionError: "session.error",
@@ -60,6 +63,23 @@ export const liveServerMessageSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal(LIVE_MESSAGE_TYPES.turnComplete) }),
   z.object({ type: z.literal(LIVE_MESSAGE_TYPES.sessionInterrupted) }),
+  z.object({
+    type: z.literal(LIVE_MESSAGE_TYPES.toolStarted),
+    name: z.string().min(1).max(128),
+    label: z.string().min(1).max(160),
+  }).strict(),
+  z.object({
+    type: z.literal(LIVE_MESSAGE_TYPES.toolCompleted),
+    name: z.string().min(1).max(128),
+    success: z.literal(true),
+    message: z.string().min(1).max(240),
+  }).strict(),
+  z.object({
+    type: z.literal(LIVE_MESSAGE_TYPES.toolFailed),
+    name: z.string().min(1).max(128),
+    success: z.literal(false),
+    message: z.string().min(1).max(240),
+  }).strict(),
   z.object({
     type: z.literal(LIVE_MESSAGE_TYPES.sessionError),
     code: z.string(),
