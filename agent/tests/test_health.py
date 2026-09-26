@@ -18,7 +18,7 @@ def test_health_endpoint_is_healthy() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "jarvis-agent",
-        "version": "0.2.0",
+        "version": "0.4.0",
     }
 
 
