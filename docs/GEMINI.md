@@ -21,6 +21,8 @@ An unexpected Gemini connection loss retries at 0.5, 1.5, and 3 seconds, then ex
 
 Gemini events are translated into the small local protocol. Input/output transcript deltas are merged into the current interaction only. `turn.complete` is remembered until queued output audio finishes, so the UI never reports idle while speech remains audible. Gemini interruption events and local barge-in clear the queue.
 
+The SDK's `session.receive()` iterator covers one model turn. The backend receiver therefore invokes it inside an outer loop while the conversation remains active. `turn.complete` returns the session to ready; only explicit disconnect, shutdown, or a genuine connection failure exits the `client.aio.live.connect()` context.
+
 ## Manual Verification
 
 After placing a real key in `.env`, run `npm.cmd run dev`, enable the microphone, and connect AI. Verify:

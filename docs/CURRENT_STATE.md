@@ -13,6 +13,7 @@
 - AudioWorklet-backed continuous microphone frames
 - Stateful mono PCM16 resampling to 16 kHz with small chunks and VAD pre-roll
 - One backend-owned `gemini-3.8-live` session with finite reconnect/backoff
+- Persistent sender/receiver tasks that keep the same Gemini connection open across turns
 - Gemini native PCM output queued through Web Audio at its declared sample rate (normally 24 kHz)
 - Incremental input and output transcription in the current-interaction UI
 - English, Sinhala, and mixed-language behavior in the concise system instruction
