@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { backendHealthSchema, type BackendHealth } from "../../shared/schemas/health";
@@ -29,11 +30,23 @@ export class BackendManager {
   private startPromise: Promise<void> | null = null;
   private status: BackendStatus = "stopped";
   private readonly port = parsePort(process.env.JARVIS_AGENT_PORT);
+  private readonly liveBridgeToken = randomBytes(32).toString("hex");
 
-  constructor(private readonly projectRoot: string) {}
+  constructor(
+    private readonly projectRoot: string,
+    private readonly expectedVersion?: string,
+  ) {}
 
   get currentStatus(): BackendStatus {
     return this.status;
+  }
+
+  get liveWebSocketUrl(): string {
+    return `ws://${LOOPBACK_HOST}:${this.port}/ws/live`;
+  }
+
+  get bridgeToken(): string {
+    return this.liveBridgeToken;
   }
 
   async start(): Promise<void> {
@@ -62,7 +75,13 @@ export class BackendManager {
       throw new Error(`Agent health request failed with status ${response.status}`);
     }
 
-    return backendHealthSchema.parse(await response.json());
+    const health = backendHealthSchema.parse(await response.json());
+    if (this.expectedVersion && health.version !== this.expectedVersion) {
+      throw new Error(
+        `Agent version mismatch: expected ${this.expectedVersion}, received ${health.version}`,
+      );
+    }
+    return health;
   }
 
   async stop(): Promise<void> {
@@ -103,6 +122,7 @@ export class BackendManager {
         ...process.env,
         JARVIS_AGENT_HOST: LOOPBACK_HOST,
         JARVIS_AGENT_PORT: String(this.port),
+        JARVIS_LIVE_TOKEN: this.liveBridgeToken,
         PYTHONUNBUFFERED: "1",
       },
       windowsHide: true,
