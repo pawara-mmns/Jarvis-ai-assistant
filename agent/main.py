@@ -10,6 +10,7 @@ import uvicorn
 
 from agent import __version__
 from agent.api.health import router as health_router
+from agent.api.live import router as live_router
 from agent.core.config import settings
 from agent.core.logging import configure_logging
 
@@ -31,6 +32,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(health_router)
+app.include_router(live_router)
 
 
 async def serve_until_parent_closes() -> None:
