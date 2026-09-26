@@ -1,6 +1,6 @@
 # JARVIS Desktop AI
 
-JARVIS is a Windows desktop AI assistant. Phase 3 adds explicitly connected Gemini Live voice, native audio playback, and transcripts to the secure Phase 0–2 foundation.
+JARVIS is a Windows desktop AI assistant. Phase 4.1 adds smart trusted folder and application resolution to the secure voice and desktop-tool foundation.
 
 ## Architecture
 

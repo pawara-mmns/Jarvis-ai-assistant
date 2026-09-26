@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 .env
 *.log
+config/user-aliases.json
 coverage/
 .DS_Store
 Thumbs.db
