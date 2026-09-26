@@ -1,12 +1,11 @@
 # UI Architecture
 
-Phase 3 preserves the Phase 1 HUD and Phase 2 microphone controls.
+Phase 4 preserves the voice HUD and activates its existing `executing` state.
 
-- The header adds a restrained AI item: Offline, Connecting, Ready, Error, or Not Configured, plus Connect/Disconnect.
-- The microphone panel explicitly says either `LOCAL ONLY · audio stays on this device` or `AI SESSION ACTIVE · detected speech is sent to Gemini`.
-- `CURRENT INTERACTION` remains a two-row, current-turn view. Gemini input transcription replaces `YOU`; output transcription replaces `JARVIS`. It is not a chat history.
-- Listening uses microphone amplitude and waveform. Speaking uses actual decoded Gemini PCM amplitude and waveform.
-- Normal Live voice states are idle, listening, thinking, speaking, and error. `executing` remains reserved for future tools.
-- The development strip shows only connection state, input sample rate, input streaming/local state, and output playback state—never keys, base64 audio, or large event logs.
-
-Local VAD still controls idle/listening when AI is disconnected. While a Live session is active, the Live controller owns the turn state so playback and turn-completion timing remain authoritative.
+- Voice turns remain listening → thinking → speaking → idle.
+- A tool call transitions to executing and shows a friendly label such as “Opening Chrome...” or “Setting volume to 40%...”.
+- Tool success or failure returns the UI to thinking while the compact action result remains visible and Gemini prepares its grounded spoken response.
+- `CURRENT INTERACTION` remains a current-turn view, not chat history or a developer console.
+- Typed lifecycle events contain only tool name, friendly label, success, and sanitized message—never raw arguments, paths, stack traces, keys, or audio payloads.
+- Tool failure does not force the global error state; connection/transport/playback failures still do.
+- Listening and speaking visuals continue to use real microphone/output levels, and barge-in behavior is unchanged.
