@@ -16,11 +16,15 @@ from agent.ai.gemini_config import (
     SYSTEM_INSTRUCTION,
 )
 from agent.ai.gemini_events import translate_live_event
+from agent.tools.default_registry import create_default_tool_registry
+from agent.tools.registry import ToolRegistry
+from agent.tools.result import ToolResult
 
 logger = logging.getLogger(__name__)
 EmitEvent = Callable[[dict[str, object]], Awaitable[None]]
 ClientFactory = Callable[[str], Any]
 AudioCommand = tuple[Literal["audio", "end"], bytes | None]
+MAX_TOOL_CALLS_PER_USER_TURN = 5
 
 
 class LiveSessionState(StrEnum):
@@ -81,11 +85,13 @@ class GeminiLiveService:
         config: GeminiLiveConfig,
         emit: EmitEvent,
         client_factory: ClientFactory | None = None,
+        tool_registry: ToolRegistry | None = None,
     ) -> None:
         self.config = config
         self.emit = emit
         self.lifecycle = LiveSessionStateMachine()
         self._client_factory = client_factory or (lambda api_key: genai.Client(api_key=api_key))
+        self.tool_registry = tool_registry or create_default_tool_registry()
         self._client: Any = None
         self._session: Any = None
         self._session_open = False
@@ -93,6 +99,8 @@ class GeminiLiveService:
         self._ready = asyncio.Event()
         self._stop_event = asyncio.Event()
         self._audio_queue: asyncio.Queue[AudioCommand] = asyncio.Queue(maxsize=256)
+        self._sdk_send_lock = asyncio.Lock()
+        self._tool_calls_this_turn = 0
         self._closing = False
 
     @property
@@ -126,6 +134,7 @@ class GeminiLiveService:
         self._session_open = False
         self._ready.clear()
         self._stop_event.clear()
+        self._tool_calls_this_turn = 0
         self._discard_queued_audio()
         self.lifecycle.transition(LiveSessionState.CONNECTING)
         await self.emit({"type": "session.state", "state": "connecting"})
@@ -150,7 +159,10 @@ class GeminiLiveService:
     async def end_audio(self) -> bool:
         if not self._can_send():
             return False
-        return self._queue_audio(("end", None))
+        queued = self._queue_audio(("end", None))
+        if queued:
+            self._tool_calls_this_turn = 0
+        return queued
 
     async def close(self) -> None:
         if self.state == LiveSessionState.DISCONNECTED:
@@ -178,6 +190,9 @@ class GeminiLiveService:
                         input_audio_transcription=types.AudioTranscriptionConfig(),
                         output_audio_transcription=types.AudioTranscriptionConfig(),
                         system_instruction=SYSTEM_INSTRUCTION,
+                        tools=[
+                            types.Tool(function_declarations=self.tool_registry.declarations())
+                        ],
                     )
                     async with self._client.aio.live.connect(
                         model=self.config.model, config=config
@@ -259,6 +274,8 @@ class GeminiLiveService:
             received_response = False
             async for response in session.receive():
                 received_response = True
+                if getattr(response, "tool_call", None) is not None:
+                    await self._handle_tool_call(session, response.tool_call)
                 events = translate_live_event(response)
                 for event in events:
                     await self.emit(event)
@@ -277,13 +294,55 @@ class GeminiLiveService:
             command, audio = await self._audio_queue.get()
             try:
                 if command == "audio" and audio:
-                    await session.send_realtime_input(
-                        audio=types.Blob(data=audio, mime_type=INPUT_AUDIO_MIME_TYPE)
-                    )
+                    async with self._sdk_send_lock:
+                        await session.send_realtime_input(
+                            audio=types.Blob(data=audio, mime_type=INPUT_AUDIO_MIME_TYPE)
+                        )
                 elif command == "end":
-                    await session.send_realtime_input(audio_stream_end=True)
+                    async with self._sdk_send_lock:
+                        await session.send_realtime_input(audio_stream_end=True)
             finally:
                 self._audio_queue.task_done()
+
+    async def _handle_tool_call(self, session: Any, tool_call: Any) -> None:
+        function_responses: list[types.FunctionResponse] = []
+        for function_call in getattr(tool_call, "function_calls", None) or ():
+            raw_name = getattr(function_call, "name", None)
+            name = raw_name if isinstance(raw_name, str) else ""
+            public_name = name if self.tool_registry.get(name) is not None else "unavailable_action"
+            call_id = getattr(function_call, "id", None)
+            arguments = getattr(function_call, "args", None)
+            if self._tool_calls_this_turn >= MAX_TOOL_CALLS_PER_USER_TURN:
+                result = ToolResult.fail(
+                    "TOOL_LIMIT_EXCEEDED", "The safe action limit for this request was reached."
+                )
+            else:
+                self._tool_calls_this_turn += 1
+
+                async def tool_started(tool_name: str, label: str) -> None:
+                    await self.emit({"type": "tool.started", "name": tool_name, "label": label})
+
+                result = await self.tool_registry.execute(name, arguments, tool_started)
+
+            await self.emit(
+                {
+                    "type": "tool.completed" if result.success else "tool.failed",
+                    "name": public_name,
+                    "success": result.success,
+                    "message": result.message,
+                }
+            )
+            function_responses.append(
+                types.FunctionResponse(
+                    id=call_id if isinstance(call_id, str) else None,
+                    name=name or "unknown_tool",
+                    response=result.for_model(),
+                )
+            )
+
+        if function_responses:
+            async with self._sdk_send_lock:
+                await session.send_tool_response(function_responses=function_responses)
 
     def _can_send(self) -> bool:
         return bool(

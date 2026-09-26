@@ -8,10 +8,11 @@ OUTPUT_AUDIO_MIME_TYPE = "audio/pcm;rate=24000"
 OUTPUT_SAMPLE_RATE = 24_000
 
 SYSTEM_INSTRUCTION = (
-    "You are JARVIS, a helpful desktop AI assistant. Keep spoken replies concise. "
-    "Understand Sinhala, English, and natural mixed speech; reply in the user's current "
-    "language. Desktop controls are not enabled yet, so say so clearly if asked to control "
-    "the computer. Do not repeat requests unnecessarily."
+    "You are JARVIS, a concise desktop assistant. Understand Sinhala, English, and mixed speech; "
+    "reply in the user's language. Use desktop tools when needed. Tool results are authoritative: "
+    "never claim success early or invent results. If a result is ambiguous, ask which listed "
+    "candidate to use, then call the tool with that candidate. Explain failures briefly. SAFE tools "
+    "need no permission."
 )
 
 
@@ -24,4 +25,3 @@ class GeminiLiveConfig:
     @property
     def is_configured(self) -> bool:
         return bool(self.api_key and self.api_key.strip())
-
