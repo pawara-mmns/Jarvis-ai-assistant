@@ -170,6 +170,19 @@ input:focus-visible {
   color: var(--text);
 }
 
+.connection-action:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.ai-action-label {
+  border-left: 1px solid var(--border);
+  padding-left: 7px;
+  color: rgb(var(--accent) / 0.78);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
 .status-dot {
   width: 6px;
   height: 6px;
@@ -193,6 +206,11 @@ input:focus-visible {
   background: rgb(var(--danger));
 }
 
+.status-dot--error {
+  background: rgb(var(--danger));
+  box-shadow: 0 0 8px rgb(var(--danger) / 0.45);
+}
+
 .main-stage {
   --state-color: var(--accent);
   position: relative;
@@ -200,7 +218,7 @@ input:focus-visible {
   min-height: 0;
   grid-template-columns: minmax(430px, 1fr) minmax(280px, 350px);
   gap: clamp(26px, 4vw, 64px);
-  padding: 30px clamp(24px, 4.5vw, 68px) 20px;
+  padding: 18px clamp(24px, 4.5vw, 68px) 8px;
 }
 
 .main-stage--confirmation {
@@ -217,7 +235,7 @@ input:focus-visible {
 
 .stage-metadata {
   position: absolute;
-  top: 18px;
+  top: 10px;
   left: clamp(24px, 4.5vw, 68px);
   display: flex;
   gap: 16px;
@@ -590,11 +608,12 @@ input:focus-visible {
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 12px;
 }
 
 .transcript-panel,
-.mini-preview {
+.mini-preview,
+.microphone-panel {
   border: 1px solid var(--border);
   background: linear-gradient(145deg, rgba(17, 26, 34, 0.76), rgba(7, 12, 17, 0.58));
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.18);
@@ -602,9 +621,115 @@ input:focus-visible {
 }
 
 .transcript-panel {
-  min-height: 300px;
-  padding: 22px;
+  min-height: 220px;
+  padding: 18px;
   border-radius: 3px 18px 3px 3px;
+}
+
+.microphone-panel {
+  padding: 13px 15px;
+  border-radius: 3px;
+}
+
+.microphone-panel__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.microphone-signal {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--text-muted);
+  box-shadow: 0 0 0 4px rgba(83, 101, 111, 0.1);
+}
+
+.microphone-panel--active .microphone-signal {
+  background: rgb(var(--success));
+  box-shadow: 0 0 9px rgb(var(--success) / 0.55);
+}
+
+.microphone-panel--starting .microphone-signal {
+  background: rgb(var(--warning));
+  animation: statusPulse 1.4s ease-in-out infinite;
+}
+
+.microphone-panel--error .microphone-signal {
+  background: rgb(var(--danger));
+}
+
+.microphone-panel__status div {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.microphone-panel__status strong {
+  color: var(--text);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+}
+
+.microphone-panel__status div span {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.microphone-toggle {
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 5px 8px;
+  background: rgb(var(--accent) / 0.06);
+  color: rgb(var(--accent));
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.microphone-toggle:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.microphone-device {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.microphone-device select {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 24px 5px 7px;
+  background: #080d12;
+  color: var(--text-secondary);
+  font-size: 10px;
+  text-transform: none;
+}
+
+.microphone-privacy {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.microphone-privacy--live {
+  color: rgb(var(--success) / 0.86);
 }
 
 .section-heading {
@@ -690,7 +815,7 @@ input:focus-visible {
 }
 
 .mini-preview {
-  padding: 16px;
+  padding: 12px;
   border-radius: 3px;
 }
 
@@ -698,7 +823,7 @@ input:focus-visible {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: 15px;
+  margin-top: 10px;
   padding: 9px 12px 9px 8px;
   border: 1px solid var(--border-strong);
   border-radius: 28px;
@@ -735,7 +860,7 @@ input:focus-visible {
 }
 
 .mini-preview__note {
-  margin-top: 11px;
+  margin-top: 8px;
   color: var(--text-muted);
   font-size: 9px;
   line-height: 1.5;
@@ -770,7 +895,7 @@ input:focus-visible {
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 18px;
   border-top: 1px solid rgba(231, 185, 94, 0.14);
@@ -796,12 +921,14 @@ input:focus-visible {
   font-size: 8px;
 }
 
+.dev-source-controls,
 .dev-state-controls {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
+.dev-source-controls button,
 .dev-state-controls button {
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -813,11 +940,13 @@ input:focus-visible {
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
+.dev-source-controls button:hover,
 .dev-state-controls button:hover {
   border-color: var(--border-strong);
   color: var(--text-secondary);
 }
 
+.dev-source-controls button.is-active,
 .dev-state-controls button.is-active {
   border-color: rgb(var(--accent) / 0.5);
   background: rgb(var(--accent) / 0.09);
@@ -826,6 +955,16 @@ input:focus-visible {
 
 .dev-copy-controls {
   position: relative;
+}
+
+.dev-live-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  color: var(--text-muted);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .dev-copy-controls summary {
@@ -992,10 +1131,14 @@ input:focus-visible {
   }
 
   .dev-simulator {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto auto 1fr;
   }
 
   .dev-copy-controls {
+    display: none;
+  }
+
+  .dev-live-readout {
     display: none;
   }
 }
